@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
+import Input from "@/components/ui/Input"
 
 import { useForm } from "react-hook-form"
 import { email, z } from "zod"
@@ -86,31 +87,21 @@ export default function LoginPage() {
                     className="space-y-4"
                 >
                     <div>
-                        <input
+                        <Input
                             type="email"
                             placeholder="Email"
+                            error={errors.email?.message}
                             {...register("email")}
-                            className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-3 outline-none transition focus:border-white"
                         />
-                        {errors.email && (
-                            <p className="mt-1 text-sm text-red-500">
-                                {errors.email.message}
-                            </p>
-                        )}
                     </div>
 
                     <div>
-                        <input
+                        <Input
                             type="password"
                             placeholder="Password"
+                            error={errors.password?.message}
                             {...register("password")}
-                            className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-3 outline-none transition focus:border-white"
                         />
-                        {errors.password && (
-                            <p className="mt-1 text-sm text-red-500">
-                                {errors.password.message}
-                            </p>
-                        )}
                     </div>
 
                     <button
