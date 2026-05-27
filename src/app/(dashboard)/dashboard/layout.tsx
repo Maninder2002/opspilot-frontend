@@ -1,6 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 import { clearAuthData } from "@/utils/storage"
 
@@ -28,21 +29,26 @@ export default function DashboardLayout({
         </div>
 
         <nav className="flex-1 space-y-2 p-4">
-          <button className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-left transition hover:bg-zinc-700">
+          <Link
+            href="/dashboard"
+            className="block rounded-xl px-4 py-3 transition hover:bg-zinc-800"
+          >
             Dashboard
-          </button>
+          </Link>
 
-          <button className="w-full rounded-xl px-4 py-3 text-left transition hover:bg-zinc-800">
+          <Link
+            href="/chat"
+            className="block rounded-xl px-4 py-3 transition hover:bg-zinc-800"
+          >
             AI Chat
-          </button>
+          </Link>
 
-          <button className="w-full rounded-xl px-4 py-3 text-left transition hover:bg-zinc-800">
+          <Link
+            href="/upload"
+            className="block rounded-xl px-4 py-3 transition hover:bg-zinc-800"
+          >
             Upload Logs
-          </button>
-
-          <button className="w-full rounded-xl px-4 py-3 text-left transition hover:bg-zinc-800">
-            Generators
-          </button>
+          </Link>
         </nav>
 
         <div className="border-t border-zinc-800 p-4">
