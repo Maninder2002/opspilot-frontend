@@ -11,7 +11,7 @@ import { AxiosError } from "axios"
 
 import SiteHeader from "@/components/SiteHeader"
 import Input from "@/components/ui/Input"
-import api from "@/services/api"
+import { authApi } from "@/utils/api"
 import { setAuthData } from "@/utils/storage"
 
 const loginSchema = z.object({
@@ -41,13 +41,10 @@ export default function LoginPage() {
     try {
       setLoading(true)
 
-      const response = await api.post(
-        "/auth/login",
-        {
-          email: data.email,
-          password: data.password,
-        }
-      )
+      const response = await authApi.login({
+        email: data.email,
+        password: data.password,
+      })
 
       const { token, user, message } =
         response.data

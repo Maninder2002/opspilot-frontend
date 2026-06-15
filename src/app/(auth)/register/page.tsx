@@ -11,7 +11,7 @@ import { AxiosError } from "axios"
 
 import SiteHeader from "@/components/SiteHeader"
 import Input from "@/components/ui/Input"
-import api from "@/services/api"
+import { authApi } from "@/utils/api"
 
 const registerSchema = z.object({
   name: z
@@ -45,10 +45,8 @@ export default function RegisterPage() {
     try {
       setLoading(true)
 
-      const response = await api.post(
-        "/auth/register",
-        data
-      )
+      const response =
+        await authApi.register(data)
 
       toast.success(response.data.message)
       router.push("/login")

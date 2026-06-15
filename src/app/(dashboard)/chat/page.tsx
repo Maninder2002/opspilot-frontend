@@ -8,6 +8,7 @@ import {
 
 import ChatMessage from "@/components/ChatMessage"
 import { useAppChat } from "@/contexts/AppChatContext"
+import { chatApi } from "@/utils/api"
 import { cn } from "@/lib/utils"
 
 const promptSuggestions = [
@@ -76,50 +77,20 @@ export default function ChatPage() {
     try {
       if (selectedFiles.length > 0) {
         for (const file of selectedFiles) {
-          const formData = new FormData()
-          formData.append("file", file)
-
-          await fetch(
-            `http://localhost:5000/api/chats/${activeChatId}/upload`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-              body: formData,
-            }
+          await chatApi.uploadFile(
+            activeChatId,
+            file
           )
         }
 
         setSelectedFiles([])
       }
 
-      const response = await fetch(
-        `http://localhost:5000/api/chats/${activeChatId}/messages`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify({
-            message: currentMessage,
-          }),
-        }
-      )
-
-      const text = await response.text()
-
-      let parsed
-
-      try {
-        parsed = JSON.parse(text)
-      } catch {
-        parsed = {
-          tool: null,
-          response: text,
-        }
-      }
+      const parsed =
+        await chatApi.sendMessage(
+          activeChatId,
+          currentMessage
+        )
 
       setMessages((prev) => [
         ...prev,

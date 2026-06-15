@@ -4,7 +4,7 @@ import { useState } from "react"
 import ReactMarkdown from "react-markdown"
 import toast from "react-hot-toast"
 
-import api from "@/services/api"
+import { uploadApi } from "@/utils/api"
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(
@@ -19,19 +19,8 @@ export default function UploadPage() {
     try {
       setLoading(true)
 
-      const formData = new FormData()
-      formData.append("file", file)
-
-      const response = await api.post(
-        "/upload/analyze",
-        formData,
-        {
-          headers: {
-            "Content-Type":
-              "multipart/form-data",
-          },
-        }
-      )
+      const response =
+        await uploadApi.analyzeLog(file)
 
       setAnalysis(response.data.analysis)
     } catch {

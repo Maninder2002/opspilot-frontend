@@ -9,7 +9,7 @@ import {
 } from "react"
 import { useRouter } from "next/navigation"
 
-import api from "@/services/api"
+import { chatApi } from "@/utils/api"
 import {
   clearActiveChatIdStorage,
   getActiveChatId,
@@ -82,7 +82,7 @@ export function AppChatProvider({
     useCallback(async () => {
       try {
         const response =
-          await api.get("/chats")
+          await chatApi.list()
         setChats(
           sortChatsNewestFirst(
             response.data
@@ -95,9 +95,8 @@ export function AppChatProvider({
 
   const loadChatById = useCallback(
     async (chatId: string) => {
-      const response = await api.get(
-        `/chats/${chatId}`
-      )
+      const response =
+        await chatApi.getById(chatId)
 
       setMessages(response.data.messages)
       setActiveChatId(chatId)
@@ -128,7 +127,7 @@ export function AppChatProvider({
     useCallback(async () => {
       try {
         const response =
-          await api.post("/chats")
+          await chatApi.create()
 
         setActiveChatId(response.data._id)
         setActiveChatIdStorage(
@@ -145,7 +144,7 @@ export function AppChatProvider({
   const deleteChat = useCallback(
     async (chatId: string) => {
       try {
-        await api.delete(`/chats/${chatId}`)
+        await chatApi.delete(chatId)
 
         const remaining = sortChatsNewestFirst(
           chats.filter(
@@ -179,10 +178,11 @@ export function AppChatProvider({
       title: string
     ) => {
       try {
-        const response = await api.patch(
-          `/chats/${chatId}`,
-          { title }
-        )
+        const response =
+          await chatApi.rename(
+            chatId,
+            title
+          )
 
         setChats((prev) =>
           sortChatsNewestFirst(
@@ -206,7 +206,7 @@ export function AppChatProvider({
     const init = async () => {
       try {
         const response =
-          await api.get("/chats")
+          await chatApi.list()
         const list = sortChatsNewestFirst(
           response.data
         )
