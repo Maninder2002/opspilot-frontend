@@ -1,81 +1,71 @@
 "use client"
 
 import { useState } from "react"
-
-import {
-  Check,
-  Copy,
-} from "lucide-react"
-
+import { Check, Copy } from "lucide-react"
+import { useTheme } from "next-themes"
 import {
   Prism as SyntaxHighlighter,
 } from "react-syntax-highlighter"
-
 import {
   oneDark,
+  oneLight,
 } from "react-syntax-highlighter/dist/esm/styles/prism"
 
-interface Props {
-  language: string
-
-  code: string
-}
+import { cn } from "@/lib/utils"
 
 export default function CodeBlock({
   language,
   code,
-}: Props) {
-  const [copied, setCopied] =
-    useState(false)
+}: {
+  language: string
+  code: string
+}) {
+  const [copied, setCopied] = useState(false)
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === "dark"
 
-  const handleCopy =
-    async () => {
-      await navigator.clipboard.writeText(
-        code
-      )
-
-      setCopied(true)
-
-      setTimeout(() => {
-        setCopied(false)
-      }, 2000)
-    }
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(code)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-zinc-700">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-zinc-700 bg-zinc-800 px-4 py-2">
-        <span className="text-sm text-zinc-400">
+    <div className="group/code relative my-4 overflow-hidden rounded-xl border border-border bg-muted/70 dark:bg-[#2a2a2e]">
+      <div className="flex items-center justify-between border-b border-border/60 px-4 py-2">
+        <span className="text-xs font-medium text-muted-foreground">
           {language}
         </span>
 
         <button
+          type="button"
           onClick={handleCopy}
-          className="flex items-center gap-2 rounded-lg px-3 py-1 text-sm transition hover:bg-zinc-700"
+          aria-label={copied ? "Copied" : "Copy code"}
+          title={copied ? "Copied" : "Copy code"}
+          className={cn(
+            "rounded-md p-1.5 text-muted-foreground transition",
+            "hover:bg-background/60 hover:text-foreground",
+            "opacity-100 sm:opacity-0 sm:group-hover/code:opacity-100"
+          )}
         >
           {copied ? (
-            <>
-              <Check size={16} />
-              Copied
-            </>
+            <Check size={14} />
           ) : (
-            <>
-              <Copy size={16} />
-              Copy
-            </>
+            <Copy size={14} />
           )}
         </button>
       </div>
 
-      {/* Code */}
       <SyntaxHighlighter
         language={language}
-        style={oneDark}
+        style={isDark ? oneDark : oneLight}
         customStyle={{
           margin: 0,
+          padding: "1rem 1.25rem",
           borderRadius: 0,
-          background:
-            "#000000",
+          background: "transparent",
+          fontSize: "0.8125rem",
+          lineHeight: "1.6",
         }}
       >
         {code}
