@@ -1,15 +1,15 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import ReactMarkdown from "react-markdown"
-
+import { useCallback, useEffect, useRef, useState } from "react"
 import ProtectedRoute from "@/components/ProtectedRoute"
 import ChatSidebar from "@/components/ChatSidebar"
 import api from "@/services/api"
+import ChatMessage from "@/components/ChatMessage"
 
 interface Message {
   role: "user" | "assistant"
   content: string
+  tool?: string | null
 }
 
 export default function ChatPage() {
@@ -23,7 +23,15 @@ export default function ChatPage() {
     useState(false)
 
   const [messages, setMessages] =
-    useState<Message[]>(([]))
+    useState<Message[]>([])
+
+  const [selectedFiles, setSelectedFiles] =
+    useState<File[]>([])
+
+  const bottomRef =
+    useRef<HTMLDivElement | null>(
+      null
+    )
 
   const handleSendMessage = async () => {
     if (!message.trim()) return
@@ -45,6 +53,37 @@ export default function ChatPage() {
     setLoading(true)
 
     try {
+      // Upload files first
+      if (
+        selectedFiles.length > 0 &&
+        activeChatId
+      ) {
+        for (const file of selectedFiles) {
+          const formData =
+            new FormData()
+
+          formData.append(
+            "file",
+            file
+          )
+
+          await fetch(
+            `http://localhost:5000/api/chats/${activeChatId}/upload`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem(
+                  "token"
+                )}`,
+              },
+              body: formData,
+            }
+          )
+        }
+
+        setSelectedFiles([])
+      }
+
       const response = await fetch(
         `http://localhost:5000/api/chats/${activeChatId}/messages`,
         {
@@ -65,49 +104,42 @@ export default function ChatPage() {
         }
       )
 
-      if (!response.body) return
+      const text =
+        await response.text()
 
-      const reader =
-        response.body.getReader()
+      let parsed
 
-      const decoder = new TextDecoder()
-
-      let aiResponse = ""
+      try {
+        parsed =
+          JSON.parse(text)
+      } catch {
+        parsed = {
+          tool: null,
+          response: text,
+        }
+      }
 
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: "",
+          tool: parsed.tool,
+          content:
+            parsed.response,
         },
       ])
-
-      while (true) {
-        const { done, value } =
-          await reader.read()
-
-        if (done) break
-
-        const chunk =
-          decoder.decode(value)
-
-        aiResponse += chunk
-
-        setMessages((prev) => {
-          const updated = [...prev]
-
-          updated[
-            updated.length - 1
-          ] = {
-            role: "assistant",
-            content: aiResponse,
-          }
-
-          return updated
-        })
-      }
     } catch (error) {
       console.error(error)
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          tool: null,
+          content:
+            "Something went wrong.",
+        },
+      ])
     } finally {
       setLoading(false)
     }
@@ -147,7 +179,7 @@ export default function ChatPage() {
     }
   }
 
-  const initializeChat = async () => {
+  const initializeChat = useCallback(async () => {
     try {
       const response =
         await api.get("/chats")
@@ -163,11 +195,19 @@ export default function ChatPage() {
     } catch (error) {
       console.error(error)
     }
-  }
+  }, [])
 
   useEffect(() => {
     initializeChat()
-  }, [])
+  }, [initializeChat])
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView(
+      {
+        behavior: "smooth",
+      }
+    )
+  }, [messages])
 
   return (
     <ProtectedRoute>
@@ -295,26 +335,12 @@ export default function ChatPage() {
 
               {messages.map(
                 (msg, index) => (
-                  <div
+                  <ChatMessage
                     key={index}
-                    className={`flex ${msg.role === "user"
-                      ? "justify-end"
-                      : "justify-start"
-                      }`}
-                  >
-                    <div
-                      className={`max-w-3xl rounded-3xl px-6 py-5 shadow-lg ${msg.role === "user"
-                        ? "bg-white text-black"
-                        : "border border-zinc-800 bg-zinc-900 text-white"
-                        }`}
-                    >
-                      <div className="prose prose-invert max-w-none prose-pre:overflow-x-auto prose-pre:rounded-xl prose-pre:bg-black">
-                        <ReactMarkdown>
-                          {msg.content}
-                        </ReactMarkdown>
-                      </div>
-                    </div>
-                  </div>
+                    role={msg.role}
+                    content={msg.content}
+                    tool={msg.tool}
+                  />
                 )
               )}
 
@@ -331,13 +357,67 @@ export default function ChatPage() {
                   </div>
                 </div>
               )}
+              <div ref={bottomRef} />
             </div>
           </div>
 
           {/* Input */}
           <div className="border-t border-zinc-800 bg-zinc-950/95 backdrop-blur">
             <div className="mx-auto w-full max-w-5xl px-6 py-5">
+              {selectedFiles.length > 0 && (
+                <div className="mb-3 flex flex-wrap gap-2">
+                  {selectedFiles.map(
+                    (file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm"
+                      >
+                        📎 {file.name}
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSelectedFiles(
+                              (prev) =>
+                                prev.filter(
+                                  (_, i) =>
+                                    i !== index
+                                )
+                            )
+                          }
+                          className="text-red-400 hover:text-red-300"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )
+                  )}
+                </div>
+              )}
               <div className="flex items-end gap-4 rounded-3xl border border-zinc-800 bg-zinc-900 p-4 shadow-2xl">
+                <input
+                  id="file-upload"
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    const files = Array.from(
+                      e.target.files || []
+                    )
+
+                    setSelectedFiles((prev) => [
+                      ...prev,
+                      ...files,
+                    ])
+                  }}
+                />
+
+                <label
+                  htmlFor="file-upload"
+                  className="cursor-pointer rounded-2xl border border-zinc-700 px-4 py-3 transition hover:bg-zinc-800"
+                >
+                  📎
+                </label>
                 <textarea
                   value={message}
                   onChange={(e) =>

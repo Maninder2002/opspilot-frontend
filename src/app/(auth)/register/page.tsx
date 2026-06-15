@@ -11,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import api from "@/services/api"
 
 import Input from "@/components/ui/Input"
+import { AxiosError } from "axios"
 
 const registerSchema = z.object({
   name: z
@@ -56,11 +57,13 @@ export default function RegisterPage() {
       toast.success(response.data.message)
 
       router.push("/login")
-    } catch (error: any) {
-      toast.error(
-        error.response?.data?.message ||
-          "Registration failed"
-      )
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        toast.error(
+          error.response?.data?.message ??
+            "Registration failed"
+        )
+      }
     } finally {
       setLoading(false)
     }

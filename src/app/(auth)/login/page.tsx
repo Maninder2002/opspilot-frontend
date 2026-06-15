@@ -11,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 
 import api from "@/services/api"
 import { setAuthData } from "@/utils/storage"
+import { AxiosError } from "axios"
 
 const loginSchema = z.object({
     email: z
@@ -61,11 +62,13 @@ export default function LoginPage() {
             toast.success(message)
 
             router.push("/dashboard")
-        } catch (error: any) {
-            toast.error(
-                error.response?.data?.message ||
-                "Login failed"
-            )
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                toast.error(
+                  error.response?.data?.message ??
+                    "Login failed"
+                )
+            }
         } finally {
             setLoading(false)
         }
