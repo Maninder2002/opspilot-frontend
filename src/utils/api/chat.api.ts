@@ -32,22 +32,12 @@ export const chatApi = {
     chatId: string,
     message: string
   ): Promise<SendMessageResponse> => {
-    const { data } = await api.post<string>(
+    const { data } = await api.post<SendMessageResponse>(
       `/chats/${chatId}/messages`,
-      { message },
-      { responseType: "text" }
+      { message }
     )
 
-    try {
-      return JSON.parse(
-        data
-      ) as SendMessageResponse
-    } catch {
-      return {
-        tool: null,
-        response: data,
-      }
-    }
+    return data
   },
 
   uploadFile: (chatId: string, file: File) => {
