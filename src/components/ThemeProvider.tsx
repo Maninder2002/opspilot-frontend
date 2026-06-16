@@ -2,7 +2,7 @@
 
 import {
   ThemeProvider as NextThemesProvider,
-} from "next-themes"
+} from "@teispace/next-themes"
 
 export function ThemeProvider({
   children,

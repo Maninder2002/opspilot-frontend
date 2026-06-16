@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { useTheme } from "next-themes"
+import { useTheme } from "@teispace/next-themes"
 import {
   Check,
   LogOut,
@@ -17,6 +17,7 @@ import {
   clearAuthData,
   getUser,
   getUserInitials,
+  type StoredUser,
 } from "@/utils/storage"
 
 const themeOptions = [
@@ -35,12 +36,15 @@ export default function UserMenu({
   const router = useRouter()
   const { theme, setTheme } = useTheme()
   const [open, setOpen] = useState(false)
-  const [user, setUser] = useState(getUser())
+  const [mounted, setMounted] = useState(false)
+  const [user, setUser] =
+    useState<StoredUser | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const isHeader = variant === "header"
 
   useEffect(() => {
     setUser(getUser())
+    setMounted(true)
   }, [])
 
   useEffect(() => {
@@ -74,7 +78,10 @@ export default function UserMenu({
     router.push("/login")
   }
 
-  const displayName = user?.name ?? "User"
+  const displayName =
+    mounted && user?.name
+      ? user.name
+      : "User"
   const initials = getUserInitials(displayName)
 
   const menuPanel = (
@@ -90,7 +97,7 @@ export default function UserMenu({
         <p className="truncate text-sm font-medium">
           {displayName}
         </p>
-        {user?.email && (
+        {mounted && user?.email && (
           <p className="truncate text-xs text-muted-foreground">
             {user.email}
           </p>
@@ -211,7 +218,9 @@ export default function UserMenu({
                 {displayName}
               </p>
               <p className="truncate text-xs leading-tight text-muted-foreground">
-                {user?.email ?? "Settings & account"}
+                {mounted && user?.email
+                  ? user.email
+                  : "Settings & account"}
               </p>
             </div>
 

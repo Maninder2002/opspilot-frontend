@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Check, Copy } from "lucide-react"
-import { useTheme } from "next-themes"
+import { useTheme } from "@teispace/next-themes"
 import {
   Prism as SyntaxHighlighter,
 } from "react-syntax-highlighter"
