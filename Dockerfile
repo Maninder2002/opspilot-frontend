@@ -6,9 +6,10 @@ RUN npm install -g pnpm
 
 COPY package.json pnpm-lock.yaml* ./
 
-RUN pnpm install --frozen-lockfile
+RUN echo "onlyBuiltDependencies[]=sharp" > .npmrc && \
+    echo "onlyBuiltDependencies[]=unrs-resolver" >> .npmrc
 
-RUN pnpm approve-builds
+RUN pnpm install --frozen-lockfile
 
 COPY . .
 
