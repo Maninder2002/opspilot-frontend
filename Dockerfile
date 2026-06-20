@@ -2,12 +2,9 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm@9
 
 COPY package.json pnpm-lock.yaml* ./
-
-RUN echo "onlyBuiltDependencies[]=sharp" > .npmrc && \
-    echo "onlyBuiltDependencies[]=unrs-resolver" >> .npmrc
 
 RUN pnpm install --frozen-lockfile
 
